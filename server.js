@@ -4,28 +4,18 @@ const bodyParser = require('body-parser');
 require('dotenv').config();
 
 const assetRoutes = require('./routes/assetRoutes');
-const notifRoutes = require('./routes/notifRoutes');
-
-
-// Now you can access environment variables using process.env
-const appId = process.env.ONESIGNAL_APP_ID;
-const restApiKey = process.env.ONESIGNAL_REST_API_KEY;
+const qrCodeRoutes = require('./routes/qrCodeRoutes');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+app.use(cors());
+app.use(bodyParser.json()); 
 
-app.use(cors()); // Enable CORS for all origins -- adjust for production
-app.use(bodyParser.json()); // Parse incoming JSON payloads
-
-// Mount asset routes under /api/assets
 app.use('/api/assets', assetRoutes);
-app.use('/api/notify', notifRoutes);
+app.use('/api', qrCodeRoutes); // Routes like /api/assets/:id/generate-qrcode and /api/qrcodes/log
+app.use('/api/auth', authRoutes);
 
 
-app.get('/', (req, res) => {
-  res.send('Assets Management Backend API is running');
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+app.listen(process.env.PORT, () => {
+  console.log(`Server running on http://localhost:${process.env.PORT}`);
 });

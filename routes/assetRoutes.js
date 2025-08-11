@@ -1,27 +1,23 @@
 const express = require('express');
 const router = express.Router();
+const assetCtrl = require('../controllers/assetController');
+const multer = require('multer');
 
-const {
-  getAssets,
-  getAssetById,
-  createAsset,
-  updateAsset,
-  deleteAsset,
-} = require('../controllers/assetController');
+// In-memory storage for images
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 // GET all assets
-router.get('/', getAssets);
+router.get('/', assetCtrl.getAllAssets);
 
-// GET an asset by ID
-router.get('/:id', getAssetById);
+// POST create asset
+router.post('/', upload.single('image'), assetCtrl.addAsset);
 
-// POST create a new asset
-router.post('/', createAsset);
+// PUT update asset
+router.put('/:id', upload.single('image'), assetCtrl.updateAsset);
 
-// PUT update an existing asset
-router.put('/:id', updateAsset);
+//Get data by id
+router.get('/:id', assetCtrl.getAssetById);
 
-// DELETE an asset
-router.delete('/:id', deleteAsset);
 
 module.exports = router;

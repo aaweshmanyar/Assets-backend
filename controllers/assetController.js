@@ -1,47 +1,134 @@
-// Simulated in-memory asset list to start
-let assets = [];
-let currentId = 1;
+const db = require('../db');
 
-const getAssets = (req, res) => {
-  res.json(assets);
+exports.addAsset = async (req, res) => {
+  try {
+    const {
+      assetName,
+      assetType,
+      serialNumber,
+      purchaseDate,
+      purchaseCost,
+      vendor,
+      department,
+      assignedToId,
+      assignedTo,
+      mobileNumber,
+      status,
+      warrantyExpiry,
+      description
+    } = req.body;
+
+    // Get image data as Buffer from memory
+    const imageData = req.file ? req.file.buffer : null;
+
+    await db.execute(
+      "CALL add_asset(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+      [
+        assetName,
+        assetType,
+        serialNumber,
+        purchaseDate || null,
+        purchaseCost || null,
+        vendor,
+        department,
+        assignedToId || null,
+        assignedTo,
+        mobileNumber,
+        status || 'Active',
+        warrantyExpiry || null,
+        description,
+        imageData // send as LONGBLOB buffer
+      ]
+    );
+
+    res.status(201).json({ success: true, message: 'Asset added successfully' });
+  } catch (err) {
+    console.error('Error adding asset:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
 };
 
-const getAssetById = (req, res) => {
-  const id = parseInt(req.params.id);
-  const asset = assets.find(a => a.id === id);
-  if (!asset) return res.status(404).json({ message: "Asset not found" });
-  res.json(asset);
+
+exports.getAllAssets = async (req, res) => {
+  try {
+    const [rows] = await db.execute("CALL get_all_assets()");
+    // rows is an array, since CALL returns result sets wrapped in arrays
+    // rows[0] contains the actual data from the SELECT inside the procedure
+    res.status(200).json({ success: true, data: rows[0] });
+  } catch (err) {
+    console.error('Error fetching assets:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+}; 
+
+
+
+
+
+
+
+exports.updateAsset = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      assetName,
+      assetType,
+      serialNumber,
+      purchaseDate,
+      purchaseCost,
+      vendor,
+      department,
+      assignedTo,
+      mobileNumber,
+      status,
+      warrantyExpiry,
+      description
+    } = req.body;
+
+    const imageData = req.file ? req.file.buffer : null;
+
+    await db.execute(
+      "CALL update_asset(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+      [
+        id,
+        assetName,
+        assetType,
+        serialNumber || null,
+        purchaseDate || null,
+        purchaseCost || null,
+        vendor || null,
+        department || null,
+        assignedTo || null,
+        mobileNumber || null,
+        status || 'Active',
+        warrantyExpiry || null,
+        description || null,
+        imageData
+      ]
+    );
+
+    res.status(200).json({ success: true, message: 'Asset updated successfully' });
+  } catch (err) {
+    console.error('Error updating asset:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
 };
 
-const createAsset = (req, res) => {
-  const asset = {
-    id: currentId++,
-    ...req.body,
-  };
-  assets.push(asset);
-  res.status(201).json(asset);
-};
 
-const updateAsset = (req, res) => {
-  const id = parseInt(req.params.id);
-  const index = assets.findIndex(a => a.id === id);
-  if (index === -1) return res.status(404).json({ message: "Asset not found" });
-  assets[index] = { id, ...req.body };
-  res.json(assets[index]);
-};
-
-const deleteAsset = (req, res) => {
-  const id = parseInt(req.params.id);
-  const index = assets.findIndex(a => a.id === id);
-  if (index === -1) return res.status(404).json({ message: "Asset not found" });
-  assets.splice(index, 1);
-  res.json({ message: "Asset deleted successfully" });
-};
-
-module.exports = {
-  getAssets,
-  getAssetById,
-  createAsset,
-  updateAsset,
-  deleteAsset,
+// controllers/assetController.js
+exports.getAssetById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await db.execute(
+      "SELECT id, asset_name, asset_type, serial_number, purchase_date, purchase_cost, vendor, department, assigned_to_id, assigned_to_name, mobile_number, status, warranty_expiry, description, IsDeleted FROM assets WHERE id=? LIMIT 1",
+      [id]
+    );
+    if (rows && rows.length > 0) {
+      res.json({ success: true, data: rows[0] });
+    } else {
+      res.status(404).json({ success: false, message: "Asset not found" });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 };
