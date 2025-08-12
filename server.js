@@ -6,6 +6,9 @@ require('dotenv').config();
 const assetRoutes = require('./routes/assetRoutes');
 const qrCodeRoutes = require('./routes/qrCodeRoutes');
 const authRoutes = require('./routes/authRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
+
+
 
 const app = express();
 app.use(cors());
@@ -14,6 +17,7 @@ app.use(bodyParser.json());
 app.use('/api/assets', assetRoutes);
 app.use('/api', qrCodeRoutes); // Routes like /api/assets/:id/generate-qrcode and /api/qrcodes/log
 app.use('/api/auth', authRoutes);
+app.use('/api', dashboardRoutes);
 
 
 app.listen(process.env.PORT, () => {
