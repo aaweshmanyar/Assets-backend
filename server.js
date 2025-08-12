@@ -20,6 +20,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api', dashboardRoutes);
 
 
-app.listen(process.env.PORT, () => {
-  console.log(`Server running on http://localhost:${process.env.PORT}`);
+// Port configuration
+const PORT = process.env.PORT || 10000;
+
+// Start server
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });
