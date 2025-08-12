@@ -10,6 +10,9 @@ const upload = multer({ storage });
 // GET all assets
 router.get('/', assetCtrl.getAllAssets);
 
+// Search & paginate assets
+router.get('/search', assetCtrl.searchAssets);
+
 // POST create asset
 router.post('/', upload.single('image'), assetCtrl.addAsset);
 

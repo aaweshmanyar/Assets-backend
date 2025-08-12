@@ -132,3 +132,40 @@ exports.getAssetById = async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 };
+
+
+
+// Search and paginate assets
+exports.searchAssets = async (req, res) => {
+  try {
+    const search = req.query.search ? `%${req.query.search}%` : "%%";
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = parseInt(req.query.offset) || 0;
+
+    const [rows] = await db.execute(
+      `SELECT id, asset_name, asset_type, serial_number, purchase_date, purchase_cost, 
+              vendor, department, assigned_to_name, status, warranty_expiry, description, Qrcode
+       FROM assets
+       WHERE asset_name LIKE ? 
+          OR asset_type LIKE ? 
+          OR vendor LIKE ? 
+          OR assigned_to_name LIKE ?
+       ORDER BY id DESC
+       LIMIT ? OFFSET ?`,
+      [search, search, search, search, limit, offset]
+    );
+
+    // Optionally, get total count for pagination
+    const [countRows] = await db.execute(
+      `SELECT COUNT(*) as total FROM assets 
+       WHERE asset_name LIKE ? OR asset_type LIKE ? OR vendor LIKE ? OR assigned_to_name LIKE ?`,
+      [search, search, search, search]
+    );
+    const total = countRows[0]?.total || 0;
+
+    res.status(200).json({ success: true, total, data: rows });
+  } catch (err) {
+    console.error("Error searching assets:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
